@@ -12,12 +12,12 @@ class ColorMode(Enum):
 
 
 #Parameters
-target_segment_length = 500
+target_segment_length = 150
 min_segment_length = 10
 #max_segment_length = 1200
 horizontal = False
 vertical = True
-color_mode = ColorMode.G
+color_mode = ColorMode.BRIGHTNESS
 
 
 #function to generate edge mask:
@@ -48,8 +48,11 @@ def get_edge_mask(frame):
 
 
 # Sorting function (sort by brightness)
+# Define constants once
+R_WEIGHT, G_WEIGHT, B_WEIGHT = 0.299, 0.587, 0.114
+weights = np.array([0.299, 0.587, 0.114])
 def get_brightness(pixel):
-    return 0.299 * pixel[0] + 0.587 * pixel[1] + 0.114 * pixel[2]
+    return R_WEIGHT * pixel[0] + G_WEIGHT * pixel[1] + B_WEIGHT * pixel[2]
 
 def get_red(pixel):
     return pixel[0]
@@ -62,7 +65,7 @@ def get_blue(pixel):
 
 
 # Load image and mask
-image = Image.open("streetman.jpg").convert("RGB")
+image = Image.open("person.jpg").convert("RGB")
 mask = get_edge_mask(np.array(image))
 
 # Resize mask to match image dimensions if necessary
@@ -111,7 +114,7 @@ if horizontal:
             if sortable_pixels.size > 0:
                 # Sort pixels by brightness
                 if color_mode == ColorMode.BRIGHTNESS:
-                    pixel_info = [get_brightness(pixel) for pixel in sortable_pixels]
+                    pixel_info = np.dot(sortable_pixels, weights)
                 elif color_mode == ColorMode.R:
                     pixel_info = [get_red(pixel) for pixel in sortable_pixels]
                 elif color_mode == ColorMode.G:
@@ -156,7 +159,7 @@ if vertical:
             if sortable_pixels.size > 0:
                 # Sort pixels by brightness
                 if color_mode == ColorMode.BRIGHTNESS:
-                    pixel_info = [get_brightness(pixel) for pixel in sortable_pixels]
+                    pixel_info = np.dot(sortable_pixels, weights)
                 elif color_mode == ColorMode.R:
                     pixel_info = [get_red(pixel) for pixel in sortable_pixels]
                 elif color_mode == ColorMode.G:
